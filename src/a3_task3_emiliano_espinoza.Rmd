@@ -1,0 +1,125 @@
+---
+title: "a3_task3_emiliano_espinoza"
+author: "Emiliano Espinoza"
+date: "11/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message =FALSE, warning = FALSE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(kableExtra)
+library(lubridate)
+```
+
+## Read in urchins data, then clean data
+
+```{r}
+urchins <- read_csv(here("data", "urchins.csv"))
+```
+
+```{r}
+  urchins_clean <- urchins %>% 
+  clean_names()
+```
+
+## Exploratory data visualization
+
+#Exploratory histograms:
+
+```{r}
+ggplot(data = urchins_clean, aes(x = size)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~common_name) +
+  labs(x = "Urchin size(cm)", y = "Number of Observations", title = "Frequency Distribution of Sea Urchins Size")
+```
+
+#Exploratory boxplot:
+
+```{r}
+ggplot(data = urchins_clean, aes(x = common_name, y = size)) +
+  geom_boxplot() +
+  labs(x = "Common Urchin Name", y = "Size(cm)", title = "Frequency Distribution of Sea Urchins Size")
+```
+
+## Descriptive statistics, creating a summary table containing mean, median, standard deviation, sample size, and percent difference.
+
+```{r}
+urchins_stats <- urchins_clean  %>% 
+  group_by(common_name) %>% 
+  summarize(mean_size = mean(size),
+            median_size = median(size),
+            sd_size = sd(size), 
+            n = n ())
+
+kable(urchins_stats) %>% 
+  kable_styling(full_width = TRUE)
+
+purple <- urchins_stats %>% 
+  filter(common_name == "Purple Urchin")
+
+red <- urchins_stats %>% 
+  filter(common_name == "Red Urchin")
+
+percent_diff <- abs((purple$mean_size - red$mean_size)/((purple$mean_size + red$mean_size)/2))*100
+```
+
+*This exploratory data conveys the relationships between size distributions with red and purple urchin sample populations. The graphs show a greater frequency of larger size distribution with red urchin populations and a greater frequency of smaller size distribution with purple urchin populations. The information from the table stats reinforces these distribution graphs with an actual size difference of 2.31cm between the two sample populations and a percent difference of 41%.
+
+
+## Section 2: Exploring purple urchin counts by site and year
+
+# Create subset of purple urchin data
+
+```{r}
+purple_urchins <- urchins_clean %>% 
+  filter(common_name == "Purple Urchin") %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(year = year(date)) %>% 
+  mutate(site_full = case_when(
+    site %in% "NAPL" ~ "Naples Reef",
+    site %in% "AQUE" ~ "Arroyo Quemado Reef",
+    site %in% "CARP" ~ "Carpinteria Reef",
+    site %in% "MOHK" ~ "Mohawk Reef",
+    site %in% "IVEE" ~ "Isla Vista Reef"))
+```
+
+# Summary table containing total number of purple urchins observed by site and year
+
+```{r}
+purple_urchins_observed <- purple_urchins %>% 
+  group_by(site, year) %>% 
+  count(site)
+```
+
+# Creating an exploratory graph of counts of purple urchins
+
+```{r}
+ggplot(data = purple_urchins, aes(x = year)) +
+  geom_histogram() +
+  facet_wrap(~site_full) + 
+  labs(x = "Year",
+       y = "Number of Recorded Observations",
+       title = "Purple Urchins Observed at Each Site Between 2008-2019")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
